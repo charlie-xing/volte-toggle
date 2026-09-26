@@ -1,12 +1,12 @@
 # VoLTE 开关 (com.xcl.volte)
 
 在 **Google Pixel** 手机上一键为**中国大陆运营商卡**开启 VoLTE / VoNR / 5G SA，
-让国行/海外版 Pixel 也能正常用移动/联通/电信的高清语音和 5G 通话。
-不需要 root，不需要 Shizuku，不需要电脑（首次配对除外）。
+让Google Pixel 也能正常用移动/联通/电信的高清语音和 5G 通话。
+不需要 root，不需要电脑。
 
 ## 解决什么问题
 
-Pixel（尤其是海外版）出厂的运营商配置里，往往没有把国内三大运营商的 VoLTE/VoNR 打开，
+Google Pixel出厂的运营商配置里，往往没有把国内三大运营商的 VoLTE/VoNR 打开，
 表现为：4G/5G 下打不了电话要掉到 3G/2G、没有 VoLTE 图标、5G 下无法通话等。
 这些开关由系统的「运营商配置（CarrierConfig）」控制，正常只有系统或运营商能改。
 本应用用一条**手机连自己**的本地调试通道，以受限的调试身份把这些开关覆盖打开。
@@ -61,9 +61,9 @@ Pixel（尤其是海外版）出厂的运营商配置里，往往没有把国内
 - Wi-Fi 关掉时无线调试不启动，应用就连不上自己的 ADB 通道。
 - 重启后必须重放（系统限制），靠「开机后自动重新应用」+ 无线调试自启。
 - 系统 OTA 升级后要重新应用。
-- 能否成功取决于运营商与机型，VoWiFi（尤其国内联通）常常无效。
+- 能否成功取决于运营商与机型，pixel 10测试通过。
 - `PairReceiver` 是 exported 的（方便用 adb 调试触发），介意的话把 manifest 里改成 `false`。
 
 ## License
 
-[MIT](LICENSE) © charlie-xing
+[MIT](LICENSE) © Charlie
