@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.xcl.volte">
+
+    <!-- 连本机回环 ADB 需要 socket 权限 -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <application
+        android:label="VoLTE 开关"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:allowBackup="false"
+        android:extractNativeLibs="true"
+        android:supportsRtl="true">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="VoLTE 开关"
+            android:theme="@android:style/Theme.DeviceDefault.DayNight">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- 接收通知直接回复里的配对码；同时便于用 adb 触发调试 -->
+        <receiver
+            android:name=".PairReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.xcl.volte.PAIR" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+    </application>
+
+    <!-- 关键：instrumentation 跑在本应用自身 uid，Binder.getCallingUid() != shell(2000)，
+         从而绕开 CVE-2025-48617 补丁里的 isShell() 拦截；
+         MODIFY_PHONE_STATE 则由 UiAutomation.adoptShellPermissionIdentity() 满足。 -->
+    <instrumentation
+        android:name=".VolteInstrumentation"
+        android:targetPackage="com.xcl.volte"
+        android:label="VoLTE broker" />
+</manifest>
