@@ -69,7 +69,7 @@ public class VolteInstrumentation extends Instrumentation {
         }
 
         UiAutomation ua = awaitUiAutomation();
-        if (ua == null) throw new IllegalStateException("拿不到 UiAutomation（必须用 am instrument 启动）");
+        if (ua == null) throw new IllegalStateException("UiAutomation unavailable (must be started via am instrument)");
         ua.adoptShellPermissionIdentity();
         try {
             Context ctx = getContext();
@@ -88,7 +88,8 @@ public class VolteInstrumentation extends Instrumentation {
 
             boolean want = !"off".equals(action);
             boolean ims = awaitIms(subId, want);
-            return (want ? "已开启" : "已关闭") + "，IMS " + (ims ? "已注册" : "未注册");
+            if (L.zh(ctx)) return (want ? "已开启" : "已关闭") + "，IMS " + (ims ? "已注册" : "未注册");
+            return (want ? "enabled" : "disabled") + ", IMS " + (ims ? "registered" : "not registered");
         } finally {
             try { ua.dropShellPermissionIdentity(); } catch (Throwable ignored) {}
         }

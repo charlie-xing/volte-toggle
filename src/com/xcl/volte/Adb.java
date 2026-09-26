@@ -62,14 +62,16 @@ public final class Adb {
         final int port = Discovery.find(ctx, Discovery.PAIRING, 8000);
         if (port <= 0) {
             throw new IllegalStateException(
-                    "找不到配对端口：请先在「开发者选项 → 无线调试 → 使用配对码配对设备」打开那个对话框，再回来点配对");
+                    L.t(ctx, "Pairing port not found: open Developer options → Wireless debugging → "
+                            + "Pair device with pairing code first, then pair again",
+                            "找不到配对端口：请先在「开发者选项 → 无线调试 → 使用配对码配对设备」打开那个对话框，再回来点配对"));
         }
         BuildersKt.<Unit>runBlocking(
                 EmptyCoroutineContext.INSTANCE,
                 new Function2<CoroutineScope, Continuation<? super Unit>, Object>() {
                     @Override
                     public Object invoke(CoroutineScope scope, Continuation<? super Unit> cont) {
-                        return Kadb.Companion.pair(HOST, port, code, "VoLTE 开关", cont);
+                        return Kadb.Companion.pair(HOST, port, code, "VoLTE Toggle", cont);
                     }
                 });
     }
@@ -109,7 +111,9 @@ public final class Adb {
         }
         if (last != null) throw last;
         throw new IllegalStateException(
-                "连不上本机 ADB：请确认「开发者选项 → 无线调试」已打开（需连着 Wi-Fi），并已完成配对");
+                L.t(ctx, "Cannot reach local ADB: make sure Developer options → Wireless debugging is on "
+                        + "(Wi-Fi required) and pairing is done",
+                        "连不上本机 ADB：请确认「开发者选项 → 无线调试」已打开（需连着 Wi-Fi），并已完成配对"));
     }
 
     /** 快速自检。 */

@@ -41,7 +41,7 @@ public final class Broker {
                 return new Result(false, line.startsWith("err:") ? line.substring(4) : line);
             }
             if (out.text.contains("INSTRUMENTATION_FAILED")) return new Result(false, out.text.trim());
-            return new Result(false, out.text.trim().isEmpty() ? "没有返回结果" : out.text.trim());
+            return new Result(false, out.text.trim().isEmpty() ? L.t(ctx, "No result returned", "没有返回结果") : out.text.trim());
         } catch (Throwable t) {
             String m = t.getMessage();
             return new Result(false, (m == null || m.isEmpty()) ? t.getClass().getSimpleName() : m);

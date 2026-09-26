@@ -49,6 +49,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle b) {
         super.onCreate(b);
+        setTitle(t("VoLTE Toggle", "VoLTE 开关"));
 
         ScrollView sv = new ScrollView(this);
         root = new LinearLayout(this);
@@ -57,9 +58,11 @@ public class MainActivity extends Activity {
         sv.addView(root);
         setContentView(sv);
 
-        root.addView(text("VoLTE 开关", 24, true, null));
-        root.addView(text("覆盖运营商配置开启 VoLTE / VoNR。系统不允许第三方应用写持久化配置，"
-                + "所以每次重启后需要重新应用一次。", 13, false, muted()));
+        root.addView(headerRow());
+        root.addView(text(t("Overrides the carrier config to enable VoLTE / VoNR. Android does not let "
+                + "third-party apps write persistent config, so it must be re-applied after every reboot.",
+                "覆盖运营商配置开启 VoLTE / VoNR。系统不允许第三方应用写持久化配置，"
+                + "所以每次重启后需要重新应用一次。"), 13, false, muted()));
 
         root.addView(stepsCard());
 
@@ -74,7 +77,7 @@ public class MainActivity extends Activity {
         root.addView(optionsCard());
 
         LinearLayout logCard = card();
-        logCard.addView(text("日志", 12, true, muted()));
+        logCard.addView(text(t("Log", "日志"), 12, true, muted()));
         logView = text("—", 12, false, muted());
         logView.setTypeface(Typeface.MONOSPACE);
         logCard.addView(logView);
@@ -105,7 +108,7 @@ public class MainActivity extends Activity {
     private void probeAdb() {
         if (probing) return;
         probing = true;
-        log("正在检测本机 ADB 通道 …");
+        log(t("Checking local ADB channel …", "正在检测本机 ADB 通道 …"));
         new Thread(new Runnable() {
             @Override public void run() {
                 final boolean ok = Adb.check(MainActivity.this);
@@ -114,7 +117,8 @@ public class MainActivity extends Activity {
                         probing = false;
                         adbOk = ok;
                         if (ok) PairReceiver.dismiss(MainActivity.this);
-                        log(ok ? "ADB 通道就绪" : "ADB 通道不可用，需要先配对");
+                        log(ok ? t("ADB channel ready", "ADB 通道就绪")
+                                : t("ADB channel unavailable, pair first", "ADB 通道不可用，需要先配对"));
                         render();
                     }
                 });
@@ -124,16 +128,16 @@ public class MainActivity extends Activity {
 
     private View adbCard() {
         LinearLayout c = card();
-        c.addView(text("ADB 通道（本机回环）", 12, true, muted()));
+        c.addView(text(t("ADB channel (local loopback)", "ADB 通道（本机回环）"), 12, true, muted()));
 
         if (adbOk == null) {
-            c.addView(text("检测中 …", 14, false, null));
+            c.addView(text(t("Checking …", "检测中 …"), 14, false, null));
             return c;
         }
         if (adbOk) {
-            c.addView(text("已就绪 — 可以直接开关 VoLTE", 15, true, null));
+            c.addView(text(t("Ready — you can toggle VoLTE now", "已就绪 — 可以直接开关 VoLTE"), 15, true, null));
             Button b = new Button(this);
-            b.setText("重新检测");
+            b.setText(t("Re-check", "重新检测"));
             b.setOnClickListener(new View.OnClickListener() {
                 @Override public void onClick(View v) { adbOk = null; render(); probeAdb(); }
             });
@@ -141,15 +145,19 @@ public class MainActivity extends Activity {
             return c;
         }
 
-        c.addView(text("未连接。一次性配对步骤：", 15, true, null));
-        c.addView(text("1. 打开 Wi-Fi（无线调试必须连着 Wi-Fi）\n"
+        c.addView(text(t("Not connected. One-time pairing:", "未连接。一次性配对步骤："), 15, true, null));
+        c.addView(text(t("1. Turn on Wi-Fi (wireless debugging needs Wi-Fi)\n"
+                + "2. Tap the button below; it opens Wireless debugging and posts a notification\n"
+                + "3. In Wireless debugging tap \"Pair device with pairing code\" and keep the dialog open\n"
+                + "4. Pull down the notification shade, type the 6-digit code into the notification and send",
+                "1. 打开 Wi-Fi（无线调试必须连着 Wi-Fi）\n"
                 + "2. 点下面的按钮，会跳到「无线调试」并弹出一条通知\n"
                 + "3. 在无线调试里点「输入配对码配对设备」，保持对话框开着\n"
-                + "4. 下拉通知栏，把对话框里的 6 位配对码填进通知的输入框，发送",
+                + "4. 下拉通知栏，把对话框里的 6 位配对码填进通知的输入框，发送"),
                 13, false, muted()));
 
         Button go = new Button(this);
-        go.setText("开始配对");
+        go.setText(t("Start pairing", "开始配对"));
         go.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
                 if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
@@ -160,25 +168,28 @@ public class MainActivity extends Activity {
                 }
                 PairReceiver.prompt(MainActivity.this);
                 openWirelessDebugging();
-                log("已弹出配对通知，请在系统对话框里拿配对码填进去");
+                log(t("Pairing notification posted — enter the code from the system dialog",
+                        "已弹出配对通知，请在系统对话框里拿配对码填进去"));
             }
         });
         c.addView(go);
 
-        c.addView(text("（下面这个输入框只在你能让配对对话框保持在前台时才有用；\n通常请用上面的通知方式。）", 11, false, muted()));
+        c.addView(text(t("(The box below only helps if you can keep the pairing dialog in the foreground;\n"
+                + "normally use the notification above.)",
+                "（下面这个输入框只在你能让配对对话框保持在前台时才有用；\n通常请用上面的通知方式。）"), 11, false, muted()));
 
         final EditText code = new EditText(this);
-        code.setHint("6 位配对码");
+        code.setHint(t("6-digit pairing code", "6 位配对码"));
         code.setInputType(InputType.TYPE_CLASS_NUMBER);
         c.addView(code);
 
         Button pair = new Button(this);
-        pair.setText("配对");
+        pair.setText(t("Pair", "配对"));
         pair.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
                 final String s = code.getText().toString().trim();
-                if (s.isEmpty()) { log("请先填配对码"); return; }
-                log("配对中 …");
+                if (s.isEmpty()) { log(t("Enter the pairing code first", "请先填配对码")); return; }
+                log(t("Pairing …", "配对中 …"));
                 new Thread(new Runnable() {
                     @Override public void run() {
                         String msg;
@@ -186,10 +197,12 @@ public class MainActivity extends Activity {
                         try {
                             Adb.pair(MainActivity.this, s);
                             ok = Adb.check(MainActivity.this);
-                            msg = ok ? "配对成功" : "配对完成但仍连不上，试试重新检测";
+                            msg = ok ? t("Paired successfully", "配对成功")
+                                    : t("Paired but still cannot connect, try Re-check",
+                                        "配对完成但仍连不上，试试重新检测");
                         } catch (Throwable t) {
                             String m = t.getMessage();
-                            msg = "配对失败：" + ((m == null || m.isEmpty())
+                            msg = t("Pairing failed: ", "配对失败：") + ((m == null || m.isEmpty())
                                     ? t.getClass().getSimpleName() : m);
                         }
                         final String fm = msg;
@@ -215,7 +228,8 @@ public class MainActivity extends Activity {
         if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE)
                 != PackageManager.PERMISSION_GRANTED) {
             LinearLayout c = card();
-            c.addView(text("需要「电话」权限才能读取 SIM 状态", 14, false, null));
+            c.addView(text(t("Phone permission is required to read SIM state",
+                    "需要「电话」权限才能读取 SIM 状态"), 14, false, null));
             simBox.addView(c);
             return;
         }
@@ -224,7 +238,7 @@ public class MainActivity extends Activity {
         try { list = sm.getActiveSubscriptionInfoList(); } catch (Throwable ignored) {}
         if (list == null || list.isEmpty()) {
             LinearLayout c = card();
-            c.addView(text("没有检测到已激活的 SIM", 14, false, null));
+            c.addView(text(t("No active SIM detected", "没有检测到已激活的 SIM"), 14, false, null));
             simBox.addView(c);
             return;
         }
@@ -242,7 +256,7 @@ public class MainActivity extends Activity {
         c.addView(text("subId " + subId + " · slot " + slot, 11, false, muted()));
 
         boolean on = readVolte(subId);
-        c.addView(text(on ? "当前：已开启" : "当前：未开启", 13, false, null));
+        c.addView(text(on ? t("Current: on", "当前：已开启") : t("Current: off", "当前：未开启"), 13, false, null));
 
         final Switch sw = new Switch(this);
         sw.setText("VoLTE");
@@ -260,12 +274,11 @@ public class MainActivity extends Activity {
         return c;
     }
 
-    private static final String STEPS_COLLAPSED = "使用步骤  ▸  点开看怎么操作";
-    private static final String STEPS_EXPANDED  = "使用步骤  ▾  收起";
-
     private View stepsCard() {
+        final String collapsed = t("How to use  ▸  tap to expand", "使用步骤  ▸  点开看怎么操作");
+        final String expanded  = t("How to use  ▾  collapse", "使用步骤  ▾  收起");
         LinearLayout c = card();
-        final TextView header = text(STEPS_COLLAPSED, 13, true, muted());
+        final TextView header = text(collapsed, 13, true, muted());
         header.setPadding(0, dp(2), 0, dp(2));
         c.addView(header);
 
@@ -274,8 +287,19 @@ public class MainActivity extends Activity {
         body.setVisibility(View.GONE);
         body.setPadding(0, dp(6), 0, 0);
 
-        body.addView(text("① 首次准备（只需做一次）", 14, true, null));
-        body.addView(text(
+        body.addView(text(t("① First-time setup (once only)", "① 首次准备（只需做一次）"), 14, true, null));
+        body.addView(text(t(
+                "1. Turn on Wi-Fi and connect to a network.\n"
+              + "    ⚠️ Wireless debugging only works while Wi-Fi is connected — required.\n"
+              + "2. Enable Developer options:\n"
+              + "    Settings → About phone → tap \"Build number\" 7 times\n"
+              + "    until you see \"You are now a developer\".\n"
+              + "3. Enable Wireless debugging:\n"
+              + "    Settings → System → Developer options → Wireless debugging,\n"
+              + "    turn it on and keep it on.\n"
+              + "4. Back here, tap \"Start pairing\" in the ADB channel card below,\n"
+              + "    then type the 6-digit code from the system into the notification.\n"
+              + "    Once it shows \"Ready\" you are paired — no need to pair again.",
                 "1. 先打开 Wi-Fi 并连上网络。\n"
               + "    ⚠️ 无线调试只有在 Wi-Fi 连着时才工作，这步必须做。\n"
               + "2. 打开「开发者选项」：\n"
@@ -286,18 +310,25 @@ public class MainActivity extends Activity {
               + "    并让它保持打开。\n"
               + "4. 回到本页，在下方「ADB 通道」卡片点「开始配对」，\n"
               + "    按提示把系统给的 6 位配对码填进通知里发送。\n"
-              + "    看到「已就绪」就配对好了，以后不用再配。",
+              + "    看到「已就绪」就配对好了，以后不用再配。"),
                 13, false, null));
 
-        body.addView(text("② 日常使用", 14, true, null));
-        body.addView(text(
+        body.addView(text(t("② Daily use", "② 日常使用"), 14, true, null));
+        body.addView(text(t(
+                "1. Make sure the ADB channel below shows \"Ready\"\n"
+              + "    (if unavailable, Wi-Fi or wireless debugging is usually off).\n"
+              + "2. Flip the \"VoLTE\" switch of the SIM to turn it on / off.\n"
+              + "3. For VoNR / 5G SA / VoWiFi as well: tick them in Options,\n"
+              + "    then flip that SIM's switch again to write them.\n"
+              + "4. The override is lost after a reboot — flip the switch again here,\n"
+              + "    or tick \"Re-apply after boot\" to replay it automatically.",
                 "1. 确认下方「ADB 通道」显示「已就绪」\n"
               + "    （若显示不可用，多半是 Wi-Fi 或无线调试没开）。\n"
               + "2. 拨动对应 SIM 卡的「VoLTE」开关，即可开启 / 关闭。\n"
               + "3. 想同时开 VoNR / 5G SA / VoWiFi：先在「选项」里勾选，\n"
               + "    再重新拨一次该 SIM 的开关才会写入。\n"
               + "4. 手机重启后覆盖会失效——回到本页重新拨一次开关，\n"
-              + "    或勾选「开机后自动重新应用」让它自动重放。",
+              + "    或勾选「开机后自动重新应用」让它自动重放。"),
                 13, false, null));
         c.addView(body);
 
@@ -305,7 +336,7 @@ public class MainActivity extends Activity {
             @Override public void onClick(View v) {
                 boolean show = body.getVisibility() != View.VISIBLE;
                 body.setVisibility(show ? View.VISIBLE : View.GONE);
-                header.setText(show ? STEPS_EXPANDED : STEPS_COLLAPSED);
+                header.setText(show ? expanded : collapsed);
             }
         });
         return c;
@@ -314,12 +345,14 @@ public class MainActivity extends Activity {
     private LinearLayout optionsCard() {
         final SharedPreferences p = Config.prefs(this);
         LinearLayout c = card();
-        c.addView(text("选项", 12, true, muted()));
-        c.addView(check("同时开启 VoNR（5G 通话）", Config.K_VONR, true, p));
-        c.addView(check("同时开启 5G SA（独立组网）", Config.K_SA, false, p));
-        c.addView(check("同时开启 VoWiFi（国内联通通常无效）", Config.K_VOWIFI, false, p));
-        c.addView(check("开机后自动重新应用", Config.K_BOOT, false, p));
-        c.addView(text("改完选项要重新拨一次 SIM 的开关才会写入。", 11, false, muted()));
+        c.addView(text(t("Options", "选项"), 12, true, muted()));
+        c.addView(check(t("Also enable VoNR (5G calling)", "同时开启 VoNR（5G 通话）"), Config.K_VONR, true, p));
+        c.addView(check(t("Also enable 5G SA (standalone)", "同时开启 5G SA（独立组网）"), Config.K_SA, false, p));
+        c.addView(check(t("Also enable VoWiFi (usually no effect on China Unicom)",
+                "同时开启 VoWiFi（国内联通通常无效）"), Config.K_VOWIFI, false, p));
+        c.addView(check(t("Re-apply after boot", "开机后自动重新应用"), Config.K_BOOT, false, p));
+        c.addView(text(t("After changing options, flip the SIM switch again to write them.",
+                "改完选项要重新拨一次 SIM 的开关才会写入。"), 11, false, muted()));
         return c;
     }
 
@@ -342,7 +375,7 @@ public class MainActivity extends Activity {
         if (busy) return;
         busy = true;
         render();
-        log((on ? "开启" : "关闭") + " sub " + subId + " …");
+        log((on ? t("Enabling", "开启") : t("Disabling", "关闭")) + " sub " + subId + " …");
         new Thread(new Runnable() {
             @Override public void run() {
                 final Broker.Result r = Broker.apply(MainActivity.this, subId, slot, on);
@@ -353,7 +386,7 @@ public class MainActivity extends Activity {
                 ui.post(new Runnable() {
                     @Override public void run() {
                         busy = false;
-                        log((r.ok ? "成功：" : "失败：") + r.text);
+                        log((r.ok ? t("OK: ", "成功：") : t("Failed: ", "失败：")) + r.text);
                         render();
                     }
                 });
@@ -380,11 +413,37 @@ public class MainActivity extends Activity {
             i.putExtra(":settings:fragment_args_key", "toggle_adb_wireless");
             startActivity(i);
         } catch (Throwable t) {
-            log("打不开开发者选项，请手动进入 设置 → 系统 → 开发者选项 → 无线调试");
+            log(t("Cannot open Developer options; go to Settings → System → Developer options → Wireless debugging manually",
+                    "打不开开发者选项，请手动进入 设置 → 系统 → 开发者选项 → 无线调试"));
         }
     }
 
     private void log(String s) { if (logView != null) logView.setText(s); }
+
+    // ---------------- 语言 ----------------
+
+    private String t(String en, String zh) { return L.t(this, en, zh); }
+
+    /** 标题 + 右上角的中/英切换按钮。 */
+    private View headerRow() {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        TextView title = text(t("VoLTE Toggle", "VoLTE 开关"), 24, true, null);
+        row.addView(title, new LinearLayout.LayoutParams(0,
+                ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+        Button lang = new Button(this);
+        lang.setText(L.zh(this) ? "English" : "中文");
+        lang.setAllCaps(false);
+        lang.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                L.setZh(MainActivity.this, !L.zh(MainActivity.this));
+                recreate();
+            }
+        });
+        row.addView(lang);
+        return row;
+    }
 
     // ---------------- 小工具 ----------------
 
