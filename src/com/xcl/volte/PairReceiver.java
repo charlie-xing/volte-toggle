@@ -44,12 +44,11 @@ public class PairReceiver extends BroadcastReceiver {
                 String msg;
                 try {
                     Adb.pair(app, c);
-                    msg = Adb.check(app)
-                            ? L.t(app, "Paired — go back to the app to toggle VoLTE", "配对成功，可以回应用里开关 VoLTE 了")
-                            : L.t(app, "Paired but still cannot connect", "配对完成但仍连不上");
+                    msg = L.s(app, Adb.check(app) ? R.string.notif_paired : R.string.notif_no_conn);
                 } catch (Throwable t) {
                     String m = t.getMessage();
-                    msg = L.t(app, "Pairing failed: ", "配对失败：") + ((m == null || m.isEmpty()) ? t.getClass().getSimpleName() : m);
+                    msg = L.s(app, R.string.pair_failed,
+                            (m == null || m.isEmpty()) ? t.getClass().getSimpleName() : m);
                 }
                 Log.i(VolteInstrumentation.TAG, "pair -> " + msg);
                 post(app, msg, false);
@@ -77,19 +76,18 @@ public class PairReceiver extends BroadcastReceiver {
 
     /** 弹出带「直接回复」输入框的通知，让用户在系统配对对话框开着时填码。 */
     public static void prompt(Context ctx) {
-        post(ctx, L.t(ctx, "Find the 6-digit code in the system pairing dialog and enter it below",
-                "在系统的配对对话框里找到 6 位配对码，填到下面"), true);
+        post(ctx, L.s(ctx, R.string.notif_prompt), true);
     }
 
     private static void post(Context ctx, String text, boolean withInput) {
         NotificationManager nm = ctx.getSystemService(NotificationManager.class);
         NotificationChannel ch = new NotificationChannel(
-                CHANNEL, L.t(ctx, "ADB pairing", "ADB 配对"), NotificationManager.IMPORTANCE_HIGH);
+                CHANNEL, L.s(ctx, R.string.notif_channel), NotificationManager.IMPORTANCE_HIGH);
         nm.createNotificationChannel(ch);
 
         Notification.Builder b = new Notification.Builder(ctx, CHANNEL)
                 .setSmallIcon(android.R.drawable.stat_sys_data_bluetooth)
-                .setContentTitle(L.t(ctx, "VoLTE Toggle · ADB pairing", "VoLTE 开关 · ADB 配对"))
+                .setContentTitle(L.s(ctx, R.string.notif_title))
                 .setContentText(text)
                 .setStyle(new Notification.BigTextStyle().bigText(text))
                 .setOngoing(withInput)
@@ -97,12 +95,12 @@ public class PairReceiver extends BroadcastReceiver {
 
         if (withInput) {
             android.app.RemoteInput ri = new android.app.RemoteInput.Builder(KEY_CODE)
-                    .setLabel(L.t(ctx, "6-digit pairing code", "6 位配对码")).build();
+                    .setLabel(L.s(ctx, R.string.code_hint)).build();
             Intent i = new Intent(ctx, PairReceiver.class).setAction(ACTION);
             PendingIntent pi = PendingIntent.getBroadcast(ctx, 0, i,
                     PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE);
             Notification.Action act = new Notification.Action.Builder(
-                    android.R.drawable.ic_menu_send, L.t(ctx, "Enter code", "输入配对码"), pi)
+                    android.R.drawable.ic_menu_send, L.s(ctx, R.string.notif_action), pi)
                     .addRemoteInput(ri).build();
             b.addAction(act);
         }

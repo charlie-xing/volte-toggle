@@ -19,10 +19,11 @@ echo "[1/6] aapt2 compile + link"
   --manifest AndroidManifest.xml \
   --min-sdk-version $MIN --target-sdk-version $TARGET \
   "$OUT/res.zip" \
+  --java "$OUT/gen" \
   -o "$OUT/base.apk"
 
 echo "[2/6] javac"
-javac --release 17 -nowarn -cp "$AJ:$LIBS" -d "$OUT/classes" $(find src -name '*.java')
+javac --release 17 -nowarn -cp "$AJ:$LIBS" -d "$OUT/classes" $(find src "$OUT/gen" -name '*.java')
 
 echo "[3/6] d8"
 "$BT/d8" --lib "$AJ" --min-api $MIN --output "$OUT" \

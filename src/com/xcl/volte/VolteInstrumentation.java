@@ -88,8 +88,9 @@ public class VolteInstrumentation extends Instrumentation {
 
             boolean want = !"off".equals(action);
             boolean ims = awaitIms(subId, want);
-            if (L.zh(ctx)) return (want ? "已开启" : "已关闭") + "，IMS " + (ims ? "已注册" : "未注册");
-            return (want ? "enabled" : "disabled") + ", IMS " + (ims ? "registered" : "not registered");
+            return L.s(ctx, R.string.result_fmt,
+                    L.s(ctx, want ? R.string.st_on : R.string.st_off),
+                    L.s(ctx, ims ? R.string.ims_reg : R.string.ims_unreg));
         } finally {
             try { ua.dropShellPermissionIdentity(); } catch (Throwable ignored) {}
         }
