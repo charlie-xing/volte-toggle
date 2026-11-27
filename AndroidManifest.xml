@@ -1,20 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.xcl.volte">
+    package="com.bp.pixel_ims_apn_tuner">
 
-    <!-- 连本机回环 ADB 需要 socket 权限 -->
+    <!-- Socket permission required to connect to local loopback ADB -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <!-- Self-granted via local ADB to recover stuck Wireless Debugging (adb_wifi_enabled) after boot -->
+    <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS" />
 
     <application
         android:label="@string/app_name"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:allowBackup="false"
-        android:extractNativeLibs="true"
+        android:extractNativeLibs="false"
         android:supportsRtl="true">
 
         <activity
@@ -28,12 +31,12 @@
             </intent-filter>
         </activity>
 
-        <!-- 接收通知直接回复里的配对码；同时便于用 adb 触发调试 -->
+        <!-- Receives the pairing code from notification direct reply PendingIntent -->
         <receiver
             android:name=".PairReceiver"
-            android:exported="true">
+            android:exported="false">
             <intent-filter>
-                <action android:name="com.xcl.volte.PAIR" />
+                <action android:name="com.bp.pixel_ims_apn_tuner.PAIR" />
             </intent-filter>
         </receiver>
 
@@ -44,13 +47,19 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+
+        <!-- Waits for Wi-Fi connection after reboot to automatically replay CarrierConfig -->
+        <service
+            android:name=".BootReapplyJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="false" />
     </application>
 
-    <!-- 关键：instrumentation 跑在本应用自身 uid，Binder.getCallingUid() != shell(2000)，
-         从而绕开 CVE-2025-48617 补丁里的 isShell() 拦截；
-         MODIFY_PHONE_STATE 则由 UiAutomation.adoptShellPermissionIdentity() 满足。 -->
+    <!-- Key point: instrumentation runs under this app's own UID, so Binder.getCallingUid() != shell(2000),
+         bypassing the isShell() check added by the CVE-2025-48617 patch;
+         MODIFY_PHONE_STATE is satisfied via UiAutomation.adoptShellPermissionIdentity(). -->
     <instrumentation
         android:name=".VolteInstrumentation"
-        android:targetPackage="com.xcl.volte"
-        android:label="VoLTE broker" />
+        android:targetPackage="com.bp.pixel_ims_apn_tuner"
+        android:label="Pixel IMS &amp; APN Tuner" />
 </manifest>

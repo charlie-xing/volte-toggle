@@ -1,12 +1,32 @@
 #!/usr/bin/env bash
-# 手工构建（不依赖 Gradle/AGP）：aapt2 -> javac -> d8 -> 打包 jni -> zipalign -> apksigner
+# Manual build (no Gradle/AGP): aapt2 -> javac -> r8 -> package dex+jni -> zipalign -> apksigner
 set -euo pipefail
 cd "$(dirname "$0")"
 
-SDK="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
+if [[ -z "${JAVA_HOME:-}" ]]; then
+    if [[ -x "$HOME/.local/jdk25/bin/javac" ]]; then
+        export JAVA_HOME="$HOME/.local/jdk25"
+        export PATH="$JAVA_HOME/bin:$PATH"
+    elif [[ -x "$HOME/.local/jdk21/bin/javac" ]]; then
+        export JAVA_HOME="$HOME/.local/jdk21"
+        export PATH="$JAVA_HOME/bin:$PATH"
+    fi
+fi
+
+if [[ -n "${ANDROID_HOME:-}" ]]; then
+    SDK="$ANDROID_HOME"
+elif [[ -n "${ANDROID_SDK_ROOT:-}" ]]; then
+    SDK="$ANDROID_SDK_ROOT"
+elif [[ -d "$HOME/Android/Sdk" ]]; then
+    SDK="$HOME/Android/Sdk"
+else
+    SDK="$HOME/Library/Android/sdk"
+fi
+
 BT="$SDK/build-tools/36.0.0"
 AJ="$SDK/platforms/android-36/android.jar"
 OUT=build
+APK=pixel-ims-apn-tuner.apk
 MIN=31
 TARGET=34
 
@@ -25,25 +45,52 @@ echo "[1/6] aapt2 compile + link"
 echo "[2/6] javac"
 javac --release 17 -nowarn -cp "$AJ:$LIBS" -d "$OUT/classes" $(find src "$OUT/gen" -name '*.java')
 
-echo "[3/6] d8"
-"$BT/d8" --lib "$AJ" --min-api $MIN --output "$OUT" \
-  $(find "$OUT/classes" -name '*.class') libs/*.jar >/dev/null 2>&1 || \
-"$BT/d8" --lib "$AJ" --min-api $MIN --output "$OUT" \
+echo "[3/6] r8 (shrink + dex)"
+java -cp "$BT/lib/d8.jar" com.android.tools.r8.R8 \
+  --release \
+  --dex \
+  --min-api $MIN \
+  --lib "$AJ" \
+  --pg-conf proguard-rules.pro \
+  --output "$OUT" \
   $(find "$OUT/classes" -name '*.class') libs/*.jar
 ls "$OUT"/classes*.dex
 
-echo "[4/6] 打包 dex + jni"
-mkdir -p "$OUT/pkg/lib/arm64-v8a"
-cp libs/x_spake2/jni/arm64-v8a/libspake2.so "$OUT/pkg/lib/arm64-v8a/"
-( cd "$OUT" && zip -q base.apk classes*.dex && cd pkg && zip -qr ../base.apk lib )
+echo "[4/6] package dex"
+( cd "$OUT" && zip -9q base.apk classes*.dex )
 
 echo "[5/6] zipalign"
 "$BT/zipalign" -f -p 4 "$OUT/base.apk" "$OUT/aligned.apk"
 
 echo "[6/6] sign"
-rm -f volte-toggle.apk
+KS_PATH="${KEYSTORE_PATH:-$HOME/.android/pixel-ims-apn-tuner.keystore}"
+KS_PASS_FILE="${KEYSTORE_PASS_FILE:-$HOME/.android/pixel-ims-apn-tuner.ks.pass}"
+KS_ALIAS="${KEY_ALIAS:-pixelimsapntuner}"
+if [[ -z "${KEYSTORE_PASS:-}" ]]; then
+    if [[ ! -f "$KS_PASS_FILE" ]]; then
+        mkdir -p "$(dirname "$KS_PASS_FILE")"
+        umask 077
+        head -c 32 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 32 > "$KS_PASS_FILE"
+    fi
+    KEYSTORE_PASS="$(cat "$KS_PASS_FILE")"
+fi
+if [[ ! -f "$KS_PATH" ]]; then
+    mkdir -p "$(dirname "$KS_PATH")"
+    umask 077
+    "${JAVA_HOME:+$JAVA_HOME/bin/}keytool" -genkeypair \
+      -keystore "$KS_PATH" \
+      -storetype PKCS12 \
+      -storepass "$KEYSTORE_PASS" \
+      -keypass "$KEYSTORE_PASS" \
+      -alias "$KS_ALIAS" \
+      -keyalg RSA -keysize 2048 -validity 10000 \
+      -dname "CN=Pixel IMS APN Tuner, O=PixelIMS, C=US" >/dev/null 2>&1
+    chmod 600 "$KS_PATH"
+fi
+rm -f "$APK"
 "$BT/apksigner" sign \
-  --ks "$HOME/.android/debug.keystore" \
-  --ks-pass pass:android --key-pass pass:android --ks-key-alias androiddebugkey \
-  --out volte-toggle.apk "$OUT/aligned.apk" 2>/dev/null
-echo "完成 -> $(pwd)/volte-toggle.apk ($(stat -f%z volte-toggle.apk) bytes)"
+  --ks "$KS_PATH" \
+  --ks-pass "pass:$KEYSTORE_PASS" --key-pass "pass:${KEY_PASS:-$KEYSTORE_PASS}" --ks-key-alias "$KS_ALIAS" \
+  --out "$APK" "$OUT/aligned.apk" 2>/dev/null
+"$BT/apksigner" verify --print-certs "$APK"
+echo "Done -> $(pwd)/$APK ($(wc -c < "$APK" | tr -d ' ') bytes)"

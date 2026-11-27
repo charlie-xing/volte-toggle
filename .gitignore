@@ -1,8 +1,12 @@
-# 构建产物
+# Build artifacts
 /build/
 *.apk
 *.apk.idsig
 
-# 系统/编辑器
+# Local firmware dumps (proprietary Samsung / Google files — never commit)
+/firmware/
+__pycache__/
+
+# OS / editor
 .DS_Store
 *.swp

@@ -1,39 +1,170 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 前景：白色电话听筒 + 右上角上升的信号条（VoLTE = 电话 + LTE 信号） -->
+<!-- Foreground: SIM card with voice waveform, 3 tuner sliders, and radiating IMS signal arcs -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- 电话听筒，取 Material phone 图标，居中偏左下 -->
-    <group
-        android:translateX="15"
-        android:translateY="31"
-        android:scaleX="2.35"
-        android:scaleY="2.35">
-        <path
-            android:fillColor="#FFFFFFFF"
-            android:pathData="M20.01,15.38c-1.23,0 -2.42,-0.2 -3.53,-0.56 -0.35,-0.12 -0.74,-0.03 -1.01,0.24l-1.57,1.97c-2.83,-1.35 -5.48,-3.9 -6.89,-6.83l1.95,-1.66c0.27,-0.28 0.35,-0.67 0.24,-1.02 -0.37,-1.11 -0.56,-2.3 -0.56,-3.53 0,-0.54 -0.45,-0.99 -0.99,-0.99H4.19C3.65,3 3,3.24 3,3.99 3,13.28 10.73,21 20.01,21c0.71,0 0.99,-0.63 0.99,-1.18v-3.45c0,-0.54 -0.45,-0.99 -0.99,-0.99z" />
-    </group>
+    <!-- Drop shadow under SIM card -->
+    <path
+        android:fillColor="#38020816"
+        android:pathData="M35.39,36.71 L51.76,36.71 A3.82,3.82 0 0,1 54.46,37.83 L62.52,45.88 A3.82,3.82 0 0,1 63.64,48.58 L63.64,72.61 A4.49,4.49 0 0,1 59.15,77.1 L35.39,77.1 A4.49,4.49 0 0,1 30.9,72.61 L30.9,41.2 A4.49,4.49 0 0,1 35.39,36.71 Z" />
 
-    <!-- 上升的信号条，圆头竖线 -->
+    <!-- SIM card body with diagonal blue gradient -->
+    <path android:pathData="M35.12,35.39 L51.85,35.39 A3.59,3.59 0 0,1 54.39,36.44 L62.59,44.63 A3.59,3.59 0 0,1 63.64,47.17 L63.64,71.56 A4.22,4.22 0 0,1 59.42,75.78 L35.12,75.78 A4.22,4.22 0 0,1 30.9,71.56 L30.9,39.61 A4.22,4.22 0 0,1 35.12,35.39 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="30.9"
+                android:startY="35.39"
+                android:endX="63.64"
+                android:endY="75.78">
+                <item android:offset="0.0" android:color="#FF38A3FF" />
+                <item android:offset="0.45" android:color="#FF1A73E8" />
+                <item android:offset="1.0" android:color="#FF0D47A1" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- SIM card outer rim highlight -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#B3B3E5FC"
+        android:strokeWidth="0.53"
+        android:pathData="M35.12,35.39 L51.85,35.39 A3.59,3.59 0 0,1 54.39,36.44 L62.59,44.63 A3.59,3.59 0 0,1 63.64,47.17 L63.64,71.56 A4.22,4.22 0 0,1 59.42,75.78 L35.12,75.78 A4.22,4.22 0 0,1 30.9,71.56 L30.9,39.61 A4.22,4.22 0 0,1 35.12,35.39 Z" />
+
+    <!-- Voice / IMS pulse waveform in SIM header -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#D9E1F5FE"
+        android:strokeWidth="0.92"
+        android:strokeLineCap="round"
+        android:pathData="M35.92,42.52 L35.92,44.36 M38.03,41.59 L38.03,45.29 M40.14,40.54 L40.14,46.34 M42.25,41.72 L42.25,45.16 M44.36,41.06 L44.36,45.82 M46.48,42.25 L46.48,44.63" />
+
+    <!-- Circuit trace to transmitter node -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#61B3E5FC"
+        android:strokeWidth="0.46"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M48.98,43.44 L53.21,43.44 L56.11,42.91" />
+
+    <!-- Recessed SIM chip / tuner panel -->
+    <path
+        android:fillColor="#C4061B3C"
+        android:strokeColor="#5C80D8FF"
+        android:strokeWidth="0.3"
+        android:pathData="M37.64,49.64 L56.9,49.64 A3.04,3.04 0 0,1 59.94,52.68 L59.94,68.78 A3.04,3.04 0 0,1 56.9,71.82 L37.64,71.82 A3.04,3.04 0 0,1 34.6,68.78 L34.6,52.68 A3.04,3.04 0 0,1 37.64,49.64 Z" />
+
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#4042A5F5"
+        android:strokeWidth="1.19"
+        android:strokeLineCap="round"
+        android:pathData="M37.76,54.79 L56.77,54.79" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FF40C4FF"
+        android:strokeWidth="1.19"
+        android:strokeLineCap="round"
+        android:pathData="M37.76,54.79 L51.07,54.79" />
+    <path
+        android:fillColor="#73020B1C"
+        android:pathData="M49.16,55.06 a1.91,1.91 0 1,0 3.82,0 a1.91,1.91 0 1,0 -3.82,0 Z" />
+    <path
+        android:fillColor="#FFEAF8FF"
+        android:pathData="M49.29,54.79 a1.78,1.78 0 1,0 3.56,0 a1.78,1.78 0 1,0 -3.56,0 Z" />
+    <path
+        android:fillColor="#FF0D47A1"
+        android:pathData="M50.34,54.79 a0.73,0.73 0 1,0 1.46,0 a0.73,0.73 0 1,0 -1.46,0 Z" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#4042A5F5"
+        android:strokeWidth="1.19"
+        android:strokeLineCap="round"
+        android:pathData="M37.76,60.73 L56.77,60.73" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FF40C4FF"
+        android:strokeWidth="1.19"
+        android:strokeLineCap="round"
+        android:pathData="M37.76,60.73 L43.85,60.73" />
+    <path
+        android:fillColor="#73020B1C"
+        android:pathData="M41.94,61.0 a1.91,1.91 0 1,0 3.82,0 a1.91,1.91 0 1,0 -3.82,0 Z" />
+    <path
+        android:fillColor="#FFEAF8FF"
+        android:pathData="M42.07,60.73 a1.78,1.78 0 1,0 3.56,0 a1.78,1.78 0 1,0 -3.56,0 Z" />
+    <path
+        android:fillColor="#FF0D47A1"
+        android:pathData="M43.12,60.73 a0.73,0.73 0 1,0 1.46,0 a0.73,0.73 0 1,0 -1.46,0 Z" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#4042A5F5"
+        android:strokeWidth="1.19"
+        android:strokeLineCap="round"
+        android:pathData="M37.76,66.67 L56.77,66.67" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FF40C4FF"
+        android:strokeWidth="1.19"
+        android:strokeLineCap="round"
+        android:pathData="M37.76,66.67 L53.35,66.67" />
+    <path
+        android:fillColor="#73020B1C"
+        android:pathData="M51.44,66.94 a1.91,1.91 0 1,0 3.82,0 a1.91,1.91 0 1,0 -3.82,0 Z" />
+    <path
+        android:fillColor="#FFEAF8FF"
+        android:pathData="M51.57,66.67 a1.78,1.78 0 1,0 3.56,0 a1.78,1.78 0 1,0 -3.56,0 Z" />
+    <path
+        android:fillColor="#FF0D47A1"
+        android:pathData="M52.62,66.67 a0.73,0.73 0 1,0 1.46,0 a0.73,0.73 0 1,0 -1.46,0 Z" />
+
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#4D030E22"
+        android:strokeWidth="2.51"
+        android:strokeLineCap="round"
+        android:pathData="M57.16,35.99 A7.52,7.52 0 0,1 63.56,42.39" />
     <path
         android:fillColor="#00000000"
         android:strokeColor="#FFFFFFFF"
-        android:strokeWidth="5"
+        android:strokeWidth="1.98"
         android:strokeLineCap="round"
-        android:pathData="M66,54 L66,48" />
+        android:pathData="M57.16,35.46 A7.52,7.52 0 0,1 63.56,41.86" />
     <path
         android:fillColor="#00000000"
-        android:strokeColor="#FFFFFFFF"
-        android:strokeWidth="5"
+        android:strokeColor="#4D030E22"
+        android:strokeWidth="2.51"
         android:strokeLineCap="round"
-        android:pathData="M76,54 L76,42" />
+        android:pathData="M57.86,31.02 A12.54,12.54 0 0,1 68.53,41.69" />
     <path
         android:fillColor="#00000000"
-        android:strokeColor="#FFFFFFFF"
-        android:strokeWidth="5"
+        android:strokeColor="#FFDDF4FF"
+        android:strokeWidth="1.98"
         android:strokeLineCap="round"
-        android:pathData="M86,54 L86,36" />
+        android:pathData="M57.86,30.49 A12.54,12.54 0 0,1 68.53,41.16" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#4D030E22"
+        android:strokeWidth="2.51"
+        android:strokeLineCap="round"
+        android:pathData="M58.55,26.05 A17.56,17.56 0 0,1 73.5,41.0" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FF80D8FF"
+        android:strokeWidth="1.98"
+        android:strokeLineCap="round"
+        android:pathData="M58.55,25.52 A17.56,17.56 0 0,1 73.5,40.47" />
+
+    <!-- Transmitter node on SIM chamfer -->
+    <path
+        android:fillColor="#66030E22"
+        android:pathData="M54.26,43.24 a1.85,1.85 0 1,0 3.7,0 a1.85,1.85 0 1,0 -3.7,0 Z" />
+    <path
+        android:fillColor="#FFE1F5FE"
+        android:pathData="M54.39,42.91 a1.72,1.72 0 1,0 3.44,0 a1.72,1.72 0 1,0 -3.44,0 Z" />
 </vector>

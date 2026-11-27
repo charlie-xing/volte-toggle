@@ -1,22 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Pixel 风格背景：Google 蓝对角渐变 -->
+<!-- Deep sapphire to royal cobalt background with ambient cyan glow and radar rings -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+
     <path android:pathData="M0,0h108v108h-108z">
         <aapt:attr name="android:fillColor">
             <gradient
                 android:type="linear"
-                android:startX="8"
-                android:startY="8"
-                android:endX="100"
-                android:endY="100">
-                <item android:offset="0" android:color="#FF4285F4" />
-                <item android:offset="1" android:color="#FF1A73E8" />
+                android:startX="0"
+                android:startY="0"
+                android:endX="108"
+                android:endY="108">
+                <item android:offset="0.0" android:color="#FF06152D" />
+                <item android:offset="0.48" android:color="#FF0C2B59" />
+                <item android:offset="1.0" android:color="#FF144E96" />
             </gradient>
         </aapt:attr>
     </path>
+
+    <path android:pathData="M0,0h108v108h-108z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="65.48"
+                android:centerY="39.61"
+                android:gradientRadius="36.96">
+                <item android:offset="0.0" android:color="#7329B6F6" />
+                <item android:offset="0.5" android:color="#2E1E88E5" />
+                <item android:offset="1.0" android:color="#000C2B59" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#1280D8FF"
+        android:strokeWidth="0.3"
+        android:pathData="M37.63,42.91 a18.48,18.48 0 1,0 36.96,0 a18.48,18.48 0 1,0 -36.96,0 Z" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#0D80D8FF"
+        android:strokeWidth="0.3"
+        android:pathData="M30.7,42.91 a25.41,25.41 0 1,0 50.82,0 a25.41,25.41 0 1,0 -50.82,0 Z" />
 </vector>

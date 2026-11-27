@@ -1,155 +1,238 @@
-# VoLTE Toggle (com.xcl.volte)
+# Pixel IMS & APN Tuner
 
-[English](#english) | [中文](#中文)
+**Language / Мова / Язык / Idioma / 语言:** [**English**](./README.md) | [Беларуская](./README_BY.md) | [Українська](./README_UA.md) | [Bahasa Indonesia](./README_ID.md) | [Bahasa Melayu](./README_MS.md) | [Deutsch](./README_DE.md) | [Español](./README_ES.md) | [Filipino](./README_FIL.md) | [Français](./README_FR.md) | [Português](./README_PT.md) | [日本語](./README_JA.md) | [简体中文](./README_CN.md) | [繁體中文](./README_TW.md) | [한국어](./README_KO.md) | [Русский](./README_RU.md)
 
-**Enable VoLTE / VoNR / 5G SA for mainland China carrier SIMs (China Mobile, China Unicom, China Telecom) on Google Pixel. No root, no PC.**
+**Enable VoLTE, VoWiFi, VoNR (5G calling), 5G SA, and automatic carrier APN profiles on Google Pixel 6–11 — no Root, no PC, and no external Shizuku app required.**
 
-**在 Google Pixel 上一键为中国大陆运营商卡（移动 / 联通 / 电信）开启 VoLTE / VoNR / 5G SA。不需要 root，不需要电脑。**
-
-📦 Download / 下载：[Releases → volte-toggle.apk](https://github.com/charlie-xing/volte-toggle/releases/latest)
+📦 Download: **[Releases → pixel-ims-apn-tuner.apk](https://github.com/4plashy-disprized/pixel-ims-apn-tuner/releases/latest)**
 
 ---
 
-## English
+### What problem does this solve?
 
-### The problem
+Google Pixel phones only enable VoLTE, VoWiFi, and 5G out of the box for carriers on Google's certification allowlist. If you use a SIM from an uncertified carrier or region, you typically run into these issues:
 
-Google Pixel phones usually ship without VoLTE / VoNR enabled in the carrier config for China Mobile, China Unicom and China Telecom. Symptoms:
-- Calls drop to 3G/2G, or fail on 4G/5G.
-- There's no VoLTE / HD icon.
-- You can't make calls on 5G.
+- **Calls drop to 3G/2G (or fail completely where 3G is shut down)**, and mobile data stops working during phone calls.
+- **VoLTE, Wi‑Fi Calling (VoWiFi), and 5G toggles are completely missing** from SIM settings.
+- Even with basic CarrierConfig patchers, **VoLTE breaks for 30 minutes after briefly losing 4G in an elevator or subway** (due to 3G `invalid P-CSCF` lockouts on stock APNs), or MMS, call forwarding, and Wi‑Fi Calling refuse to work because Pixel lacks proper carrier `ims` / `xcap` / `mms` APNs.
+- Some carriers inspect the SIP `User-Agent` header and **reject uncertified Google Pixel devices**, even though Pixel 6–11 uses a Samsung Shannon modem fully compatible with their IMS core.
 
-These switches live in the system's **CarrierConfig**. Normally only the system or the carrier can change them. This app uses a local debugging channel from **the phone to itself** to override them with limited, debug-level privileges.
-
-### How it works
-
-- Android doesn't let regular third-party apps write carrier config. That needs system-level permission such as `MODIFY_PHONE_STATE`.
-- The app bundles an ADB client (kadb). It connects to the phone itself over the **Wireless debugging loopback port** and launches the app's own instrumentation with shell privileges.
-- The instrumentation runs **in the app's own process**. It uses `UiAutomation` to temporarily adopt shell permissions, then calls `CarrierConfigManager.overrideConfig(subId, bundle)`.
-- The override is **non-persistent**, because that's the only mode Android allows for non-system callers. So it's **lost on reboot** and must be re-applied. That's what the "Re-apply after boot" option is for.
-- Afterwards it calls `TelephonyManager.resetIms(slot)`, so IMS re-registers immediately and the VoLTE icon appears.
-
-**Keys written**
-- VoLTE switches: `carrier_volte_available_bool`, `enhanced_4g_lte_on_by_default_bool`, `carrier_volte_provisioned_bool` and related keys.
-- Optional:
-  - `vonr_enabled_bool` for VoNR (5G calling)
-  - `carrier_nr_availabilities_int_array` for 5G SA
-  - the four VoWiFi keys
-
-Turning a SIM off clears the override and restores the carrier defaults.
-
-### Usage
-
-#### ① First-time setup (once only)
-
-1. Turn on **Wi-Fi and connect to a network**.
-   > ⚠️ Wireless debugging only works while Wi-Fi is connected. This step is required.
-2. Enable Developer options: **Settings → About phone → tap "Build number" 7 times** until you see "You are now a developer".
-3. Enable Wireless debugging: **Settings → System → Developer options → Wireless debugging**. Turn it on and keep it on.
-4. Back in the app, tap **Start pairing** in the ADB channel card. Enter the **6-digit pairing code** shown by the system into the notification and send it.
-   Once it shows **Ready**, pairing is done. The key is remembered, so you don't need to pair again.
-
-#### ② Daily use
-
-1. Make sure the ADB channel shows **Ready**. If it's unavailable, Wi-Fi or Wireless debugging is usually off.
-2. Flip the **VoLTE** switch of a SIM to turn it on or off.
-3. To also enable VoNR / 5G SA / VoWiFi, tick them under **Options**, then flip that SIM's switch again to write them.
-4. The override is lost after a reboot. Flip the switch again, or tick **Re-apply after boot** to replay it automatically.
-
-> The "How to use" card at the top of the app is collapsed by default. Tap it to see these steps.
-
-> The UI defaults to English. Use the language button at the top right to switch between English / 简体中文 / 繁體中文 / 日本語 / 한국어 / Русский / Español / Français / Deutsch / Português. The choice is remembered.
-
-### Build
-
-```sh
-./build.sh          # produces volte-toggle.apk
-```
-
-The build doesn't use Gradle. It runs aapt2 → javac → d8 → package jni → zipalign → apksigner (debug key).
-
-Dependencies live in `libs/` as jars: kadb, okio, kotlin-stdlib, kotlinx-coroutines, BouncyCastle, spake2, hiddenapibypass. UI strings are in `res/values*/strings.xml`.
-
-### Known limitations
-
-- Wireless debugging doesn't start when Wi-Fi is off, so the app can't reach its own ADB channel.
-- The override must be replayed after every reboot (a system limitation). Use "Re-apply after boot" together with Wireless debugging.
-- Re-apply after a system OTA update.
-- Results depend on carrier and device model. Tested on **Pixel 10 + China Unicom**. Reports for other combinations are welcome via Issues.
-- `PairReceiver` is exported so it's easy to trigger from adb while debugging. Set it to `false` in the manifest if that concerns you.
+**Pixel IMS & APN Tuner** solves all of this in a single standalone app (~800 KB):
+1. **Built-in `CARRIER_DB` for 461 carriers** (sourced from **Samsung Galaxy S26** firmware running the same Shannon modem family): automatically provisions persistent **Internet, IMS, MMS, and XCAP APNs** with proper bearer bitmasks that prevent 3G P-CSCF lockouts.
+2. **Unlocks VoLTE, VoWiFi, VoNR, 5G SA, ViLTE, and Backup Calling**, and optionally sets the **Samsung S26 Shannon IMS User-Agent** (including 74 carrier-specific templates).
+3. **No Root, no PC, and no external Shizuku app needed** — Google Wallet, banking apps, and OTA updates keep working normally.
 
 ---
 
-## 中文
+### Quick Start (2 minutes)
 
-### 解决什么问题
+#### Step 1. One-time pairing
 
-Google Pixel 出厂的运营商配置里，往往没有为国内三大运营商打开 VoLTE / VoNR。常见表现：
-- 打电话要掉到 3G/2G，或者 4G/5G 下打不出去。
-- 没有 VoLTE 图标。
-- 5G 下无法通话。
+1. **Connect to any Wi‑Fi network** (home, office, or mobile hotspot from another phone).
+   > ⚠️ Android only activates Wireless debugging while connected to Wi‑Fi. Once settings are applied, VoLTE/5G keep working on mobile data without Wi‑Fi.
+2. **Enable Developer options** *(if not enabled yet)*:
+   Go to **Settings → About phone**, scroll to the bottom, and tap **Build number** 7 times until you see *"You are now a developer!"*.
+3. **Enable Wireless debugging**:
+   Go to **Settings → System → Developer options → Wireless debugging**, turn it **ON**, check *"Always allow on this network"*, and tap *Allow*.
+4. **Pair the app**:
+   - Open **Pixel IMS & APN Tuner** and grant the Phone & Notification permissions.
+   - Tap **Start pairing** in the top ADB card — the app posts a pairing notification and opens Wireless debugging.
+   - Tap **Pair device with pairing code** — a dialog with a **6-digit code** appears.
+   - **Keep that dialog open**, pull down the notification shade, tap **Enter code** on the *Pixel IMS & APN Tuner* notification, type the 6 digits, and send.
+5. Return to the app — the ADB card now shows **Ready — you can proceed with configuration**. You never need to pair again.
 
-这些开关由系统的「运营商配置（CarrierConfig）」控制，正常只有系统或运营商能改。本应用用一条**手机连自己**的本地调试通道，以受限的调试身份把这些开关覆盖打开。
+#### Step 2. Apply settings for your SIM
 
-### 原理（简述）
+1. Check your SIM card panel — recommended options are **already pre-selected** for your carrier.
+2. Tap **Apply settings** (or **Apply to all SIMs** on Dual-SIM setups).
+3. Within a few seconds, the status line changes to **IMS: registered**, followed by **Active in system: VoLTE, …** confirming the live system flags.
+4. **If you enabled VoWiFi:** tap **Open SIM settings** right on the SIM card → open **Wi‑Fi calling** → make sure the toggle is turned ON and choose your preferred calling mode.
 
-- Android 不允许普通第三方应用写运营商配置，写入需要 `MODIFY_PHONE_STATE` 这类系统级授权。
-- 本应用内置一个 ADB 客户端（kadb），通过**无线调试的本机回环端口**连上手机自己，以 shell 调试身份启动应用自带的 instrumentation。
-- instrumentation 跑在**本应用自己的进程**里，借 `UiAutomation` 临时取得 shell 的授权，再调用系统的 `CarrierConfigManager.overrideConfig(subId, bundle)` 覆盖运营商配置。
-- 系统对第三方只放开**非持久化**的覆盖方式，所以**重启后覆盖会丢失**，需要重新应用一次。界面上「开机后自动重新应用」选项就是为此准备的。
-- 写完后调用 `TelephonyManager.resetIms(slot)` 让 IMS 立即重新注册，VoLTE 图标随即出现。
+---
 
-**写入的键**
-- VoLTE 开关：`carrier_volte_available_bool`、`enhanced_4g_lte_on_by_default_bool`、`carrier_volte_provisioned_bool` 等一组相关的键。
-- 可选：
-  - `vonr_enabled_bool`（VoNR / 5G 通话）
-  - `carrier_nr_availabilities_int_array`（5G SA）
-  - VoWiFi 相关的四个键
+### Complete Guide to All Options & Buttons
 
-关闭时会清空覆盖，回到运营商默认配置。
+#### Status indicators on each SIM card
 
-### 使用步骤
+- **`CARRIER_DB: ...`** — your SIM carrier matched the built-in 461-carrier database (`LTE_WIFI` = carrier supports both VoLTE and VoWiFi; `LTE_ONLY` = carrier supports VoLTE only).
+- **`Not in CARRIER_DB (factory Pixel APN kept)`** — carrier is not in the database (or is already stock-certified by Google). Existing APNs are untouched, while all IMS / 5G switches remain available.
+- **`IMS: registered` / `not registered`** — live confirmation from the telephony stack. **Registered** means your phone is actively connected to your carrier's voice server for 4G/5G/Wi‑Fi calls.
+- **`Active in system: ...`** — reads back the actual effective flags from Android's `CarrierConfigLoader` so you can see exactly what is active.
+- **Greyed-out checkboxes marked `(system profile)`** — shown when a capability is already enabled by Google's stock profile for that SIM, protecting working factory features from accidental disabling while letting you enable missing ones.
 
-#### ① 首次准备（只需做一次）
+#### Main SIM options
 
-1. 打开 **Wi-Fi 并连上网络**。
-   > ⚠️ 无线调试只有在 Wi-Fi 连着时才工作，这一步必须做。
-2. 打开「开发者选项」：**设置 → 关于手机 → 连续点 7 下「版本号」**，看到「已处于开发者模式」即可。
-3. 打开「无线调试」：**设置 → 系统 → 开发者选项 → 无线调试**，打开并保持打开。
-4. 回到应用，在「ADB 通道」卡片点「**开始配对**」，按提示把系统弹出的 **6 位配对码**填进通知里发送。
-   看到「已就绪」就配对完成，密钥会被系统记住，以后不用再配。
+| Option | What it does & when to use it |
+| :--- | :--- |
+| **VoLTE (4G calling)** | Enables HD voice calls over 4G LTE without dropping to 3G/2G, fast call setup, and uninterrupted mobile data during calls. **Recommended ON for almost all carriers.** |
+| **VoWiFi (Wi‑Fi Calling + status bar icon)** | Lets you make and receive regular phone calls and SMS over any Wi‑Fi network when cellular coverage is weak or absent (indoors, basements, rural areas, or abroad). *Enable if your carrier supports Wi‑Fi Calling (pre-selected automatically for database carriers).* |
+| **VoNR (5G calling)** | Keeps voice calls directly on 5G networks without falling back to 4G LTE during a call. |
+| **5G SA + NR signal thresholds** | Enables both **5G NSA and 5G SA** in Android (`carrier_nr_availabilities_int_array = [1, 2]`), prevents the IMS stack from disabling 5G SA when VoNR is inactive (`ims.sa_disable_policy_int = 0`), and aligns the **status-bar 5G signal bars (`SS-RSRP`)** with the standard 4G LTE scale (`[-128, -118, -108, -98]` dBm instead of Google's steep `[-110, -90, -80, -65]` dBm where `-111` dBm shows 0 bars). *Does not alter physical RF modem sensitivity.* |
+| **APN profiles (Internet, IMS, MMS, XCAP) from CARRIER_DB** | Writes verified Samsung S26 carrier APNs (`Internet`, `MMS`, `IMS` with 4G/5G/IWLAN bearer masks to prevent 30-minute 3G P-CSCF lockouts, and `XCAP` for call settings). **Persists across reboots.** |
 
-#### ② 日常使用
+#### Collapsible "Advanced ▸" options
 
-1. 确认「ADB 通道」显示「**已就绪**」（若不可用，多半是 Wi-Fi 或无线调试没开）。
-2. 拨动对应 SIM 卡的「**VoLTE**」开关，即可开启或关闭。
-3. 想同时开 VoNR / 5G SA / VoWiFi：先在「**选项**」里勾选，再重新拨一次该 SIM 的开关才会写入。
-4. 手机重启后覆盖会失效：回到应用重新拨一次开关，或勾选「**开机后自动重新应用**」让它自动重新应用。
+| Advanced Option | Purpose |
+| :--- | :--- |
+| **Samsung S26 (Shannon) IMS User-Agent** | Sets the SIP `User-Agent` header to match a certified **Samsung Galaxy S26** running the Shannon modem (using carrier-specific strings for 74 strict carriers and S26's default string for others). Fixes IMS registration rejections on carriers that block uncertified Pixel models. *Enabled by default for uncertified carriers.* |
+| **ViLTE (4G/5G video calling)** | Enables native carrier video calling directly in the stock Phone dialer (when supported by your carrier). |
+| **VoWiFi in roaming** | Allows Wi‑Fi Calling to work while roaming abroad and unlocks roaming mode preferences in SIM settings. |
+| **Supplementary services (UT / XCAP)** | Enables managing Call Forwarding, Call Waiting, and Call Barring directly over 4G/Wi‑Fi (`XCAP`) without falling back to 2G/3G. |
+| **Cross-SIM / Backup calling** | On Dual-SIM phones, lets one SIM place and receive calls/SMS **over the other SIM's mobile data connection** when the first SIM has no cellular signal (e.g., using your home SIM over a travel data eSIM abroad). |
+| **Show LTE+ / 4G+ icon on any aggregation** | Removes Pixel's hidden bandwidth threshold so the status bar honestly displays `LTE+` / `4G+` whenever Carrier Aggregation is active. Purely visual — does not alter modem RF behavior. |
+| **Allow adding APNs in system settings** | Unlocks manual APN creation and editing in Android's SIM settings if locked by the carrier profile. |
 
-> 应用主界面顶部的「使用步骤」卡片默认折叠，点一下即可展开查看以上步骤。
+#### Action buttons & global Options
 
-> 界面默认英文（English），点右上角的语言按钮可从列表切换：English / 简体中文 / 繁體中文 / 日本語 / 한국어 / Русский / Español / Français / Deutsch / Português，选择会被记住。
+- **Apply settings** — writes the selected settings for that SIM and triggers immediate IMS re-registration.
+- **Reset** — clears all overrides for that SIM and restores factory APNs and Google's default profile.
+- **Open SIM settings** — jumps straight to Android's system settings screen for that specific SIM.
+- **Apply to all SIMs** *(shown when 2 SIMs are active)* — configures all active SIMs in one tap.
+- **Re-apply after boot** *(in the bottom Options card)* — **recommended on Android 16 QPR2+ and Android 17**. Basic **VoLTE and all carrier APNs** are stored persistently in `telephony.db` and survive reboots on their own, while session-only `CarrierConfig` features (**VoWiFi**, **5G / VoNR**, **Samsung S26 User-Agent**, **Cross-SIM**, etc.) reset when the phone powers off. With this option checked, the app waits for Wi‑Fi after boot, automatically wakes Wireless debugging if Android turned it off, and silently restores the full `CarrierConfig` bundle in the background.
+- **Language** *(top-right button)* — switches the app UI between 15 languages on the fly.
 
-### 构建
+---
+
+### Troubleshooting (FAQ)
+
+<details>
+<summary><b>1. Applied settings, but it still says "IMS: not registered". What should I check?</b></summary>
+
+1. **Make sure VoLTE is activated on your plan/account by your carrier.** Many carriers offer VoLTE for free, but keep it disabled by default on the SIM until enabled in their app, via USSD code, or through customer support.
+2. **Verify your phone is currently on 4G (LTE) or 5G** and not forced into "3G/2G only" mode (*tap "Open SIM settings" → Preferred network type*).
+3. **If your carrier does not support Wi‑Fi Calling** (VoLTE only), uncheck *VoWiFi* and tap *Apply settings* again.
+4. Turn **Airplane mode** ON for 5–10 seconds and OFF again to force a fresh network attach.
+5. Very old SIM cards (7–10+ years old without USIM/ISIM applets) may physically lack IMS support — replacing the SIM card with your carrier solves it.
+</details>
+
+<details>
+<summary><b>2. Do settings reset after rebooting the phone (including away from Wi‑Fi)?</b></summary>
+
+- **Basic VoLTE (4G calling) and all carrier APNs (`Internet`, `IMS`, `MMS`, `XCAP`) DO NOT reset after a reboot** — even on Android 16 QPR2 / Android 17 and even without Wi‑Fi! They are written directly into Android's permanent `telephony.db` (`carriers` + `Persistent VoLTE` opt-in), so on the vast majority of carriers 4G calls and mobile data work immediately upon boot.
+- **On Android 12–15 and pre-QPR2 Android 16**, nothing resets at all — the entire configuration is stored permanently (`[persistent]` in the log).
+- **On Android 16 QPR2+ and Android 17**, only session-only `CarrierConfig` features (**VoWiFi**, **5G / VoNR**, **Samsung S26 IMS User-Agent** for strict carriers that block `Google Pixel`, **Cross-SIM**, **ViLTE**, and the **LTE+ icon**) temporarily reset on power-off until the phone connects to Wi‑Fi.
+- With **Re-apply after boot** enabled, the app automatically restores all of those `CarrierConfig` features within seconds as soon as your phone connects to a trusted Wi‑Fi network (or a brief hotspot from another phone while traveling).
+</details>
+
+<details>
+<summary><b>3. The ADB card says "Not connected", even though I already entered the 6-digit code earlier. Do I need to pair again?</b></summary>
+
+**No — you almost never need to pair again!** Your pairing key is already saved on the phone. Usually it is one of three things:
+1. **Wi‑Fi is off**, or you are connected to a brand-new Wi‑Fi network (e.g., hotel or café) where Wireless debugging hasn't been allowed yet. Connect to a trusted Wi‑Fi network (or allow the current network under *Wireless debugging*) and tap **Re-check**.
+2. Android sometimes turns the Wireless debugging switch off after a reboot. Tapping **Re-check** while connected to a trusted Wi‑Fi network **automatically wakes Wireless debugging back up**.
+3. Re-pairing with a 6-digit code is only needed if you manually tapped *"Forget all devices"* in Wireless debugging or uninstalled and reinstalled the app.
+</details>
+
+<details>
+<summary><b>4. It says "IMS: registered" and VoLTE works, but Wi‑Fi Calling (VoWiFi) does not activate.</b></summary>
+
+Tap **Open SIM settings** on the SIM card → open **Wi‑Fi calling** → turn the toggle **ON** and choose **Call over Wi‑Fi** as the preference (many profiles default to *Call over mobile network*, which only switches to Wi‑Fi when cellular signal drops near zero). To test VoWiFi right away, turn on **Airplane mode**, turn **Wi‑Fi** back on, and place a test call.
+</details>
+
+<details>
+<summary><b>5. Is this safe? Will Google Wallet (contactless pay), banking apps, and OTA updates still work?</b></summary>
+
+**Yes, 100% safe.** The app does not unlock the bootloader, does not root the device, does not modify the system partition, and makes zero internet connections (everything runs strictly over local loopback `127.0.0.1` on the phone itself). Google Play Integrity, Google Wallet, banking apps, and official Android OTA updates continue to work normally.
+
+> 💡 *Tip:* after installing a monthly Android system OTA update, open the app once on Wi‑Fi and tap **Apply settings**.
+</details>
+
+<details>
+<summary><b>6. How do I revert everything back to factory defaults?</b></summary>
+
+Open the app while the ADB channel shows *Ready* and tap **Reset** on your SIM card — this clears all overrides and restores factory APNs. Alternatively, uninstall the app, reboot your phone, and tap *Reset to default* in *Settings → Network & internet → SIMs → Access Point Names (APNs)*.
+</details>
+
+---
+
+### How the 3G Fallback Problem (30-Minute Lockout) Is Solved via `ims` APN Bitmasks
+
+1. **Why VoLTE breaks after dropping to 3G on uncertified carriers:**
+   - For uncertified carriers, Pixel's stock `CarrierSettings` (`others.pb`) contains **no `type="ims"` APN** (and manually created APNs in Android's UI leave hidden radio bitmasks at `0` = *all networks, including 2G & 3G*).
+   - When VoLTE is forced on via `CarrierConfig` alone, Android's `DataProfileManager` synthesizes a fallback `DEFAULT IMS` profile with bitmask `0` (`UNKNOWN`), allowing **2G (`GPRS/EDGE`) and 3G (`UMTS/HSPA+`)**.
+   - As soon as the phone briefly drops into **3G** (elevator, subway, underground garage), Android attempts to keep/establish the `IMS PDN` over 3G. Because 3G SGSN/GGSN nodes do not serve IMS voice, the network returns an empty voice proxy list: **`P-CSCF = []` (`invalid P-CSCF address`)**.
+   - Pixel's Tensor modem service (`com.shannon.imsservice` / `ShannonImsService`) enforces **`BLOCK_PDN_BY_INVALID_PCSCF = 1`** with a **`1,800,000 ms` (30 minutes of active CPU uptime — often 30–90 minutes with screen off)** penalty timer, locking out both VoLTE and VoWiFi even after returning to strong 4G/5G or Wi‑Fi!
+
+2. **How `ApnProvisioner` fixes it using hidden radio bitmasks:**
+   When writing the persistent `ims` APN into `content://telephony/carriers`, the app sets three synchronized bitmask columns (`network_type_bitmask`, `lingering_network_type_bitmask`, and legacy RIL `bearer_bitmask`) that **strictly exclude all 2G and 3G radio types** according to the carrier's `rat_mode` in `CARRIER_DB`:
+   - **`LTE_WIFI`** (carrier supports both VoLTE and VoWiFi):
+     - `network_type_bitmask = 659456` (`LTE 4096 | IWLAN 131072 | NR 524288`)
+     - `bearer_bitmask = 663552` (`RIL_LTE 8192 | IWLAN 131072 | NR 524288`)
+   - **`LTE_ONLY`** (carrier supports VoLTE only, no VoWiFi `ePDG`):
+     - `network_type_bitmask = 528384` (`LTE 4096 | NR 524288` — also excludes `IWLAN` to prevent battery drain from failed `ePDG` IKEv2 retries)
+     - `bearer_bitmask = 532480` (`RIL_LTE 8192 | NR 524288`)
+   - **`WIFI_ONLY`**:
+     - `network_type_bitmask = 131072` / `bearer_bitmask = 131072` (`IWLAN` only)
+
+   When the phone enters 3G/2G, Android sees that 3G is disallowed on the `ims` profile, cleanly tears down IMS without requesting a 3G `P-CSCF`, and **re-registers VoLTE within 1–2 seconds** as soon as 4G/5G returns.
+
+---
+
+### Technical Overview & Building from Source
+
+- Bundles a pure-Java/Kotlin ADB over TLS + SPAKE2 client (`kadb` + `BouncyCastle`) connecting to `127.0.0.1` Wireless debugging and launching `VolteInstrumentation` (`--no-hidden-api-checks`, detached mode on Android 12–13, `--no-restart` on Android 14+).
+- Adopts shell permissions via `UiAutomation` with `FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES | FLAG_DONT_USE_ACCESSIBILITY` (never kills user Accessibility services), self-grants `WRITE_SECURE_SETTINGS` for automatic `adb_wifi_enabled` recovery, provisions `content://telephony/carriers`, updates persistent `siminfo` opt-in columns, overrides `CarrierConfigManager`, and queries live state via `ImsQueryTool` (`ICarrierConfigLoader` + `ImsMmTelManager`).
+- Built without Gradle via `./build.sh` (`aapt2 → javac → r8 → zipalign → apksigner`) and `.github/workflows/build.yml`:
 
 ```sh
-./build.sh          # 产出 volte-toggle.apk
+./build.sh    # produces pixel-ims-apn-tuner.apk
 ```
 
-构建不用 Gradle，流程是 aapt2 → javac → d8 → 打包 jni → zipalign → apksigner（debug key）。
+#### Updating `CARRIER_DB` (`generate-carrier-db.py`)
 
-依赖以 jar 形式放在 `libs/`：kadb、okio、kotlin-stdlib、kotlinx-coroutines、BouncyCastle、spake2、hiddenapibypass。界面文案在 `res/values*/strings.xml`。
+`res/raw/carrier_db.json` is already pre-built in the repository, so **you do not need any firmware files to build the APK**. If you want to regenerate or audit `carrier_db.json` against newer firmware releases using [`generate-carrier-db.py`](./generate-carrier-db.py) (pure Python 3, no third-party pip packages required):
 
-### 已知限制
+<details>
+<summary><b>Required input files &amp; how to obtain them</b></summary>
 
-- Wi-Fi 关掉时无线调试不启动，应用就连不上自己的 ADB 通道。
-- 重启后必须重新应用（系统限制），可以靠「开机后自动重新应用」配合无线调试。
-- 系统 OTA 升级后要重新应用。
-- 能否成功取决于运营商与机型，目前在 **Pixel 10 + 中国联通**上测试通过。欢迎在 Issues 里反馈其他组合的结果。
-- `PairReceiver` 设为 exported，是为了方便调试时用 adb 触发；介意的话可以在 manifest 里改成 `false`。
+1. **Google Pixel files** (`./firmware/pixel/CarrierSettings/`):
+   - `carrier_list.pb`, `others.pb`, and all `*.pb` carrier protobufs.
+   - **Option A — Pull directly from any Google Pixel via USB ADB (no Root required):**
+     ```sh
+     mkdir -p firmware/pixel
+     adb pull /product/etc/CarrierSettings firmware/pixel/CarrierSettings
+     ```
+   - **Option B — Extract from an official Google Pixel Factory / OTA Image:**
+     Download a Pixel image from [developers.google.com/android/images](https://developers.google.com/android/images), unpack `product.img` (using `payload-dumper-go` + `fsck.erofs --extract=...` or `7z`), and copy `etc/CarrierSettings/` into `firmware/pixel/CarrierSettings/`.
+
+2. **Samsung One UI (Exynos / Shannon modem) files** (`./firmware/samsung/`):
+   - `mnomap.json`, `imsswitch.json`, `imsprofile.json` (from Samsung's `com.sec.imsservice`), `apns-conf.xml`, and optional `build.prop`.
+   - **Option A — Pull from an Exynos/Shannon Samsung Galaxy phone (e.g., Galaxy S24 / S25 / S26 `B` model, no Root required):**
+     ```sh
+     mkdir -p firmware/samsung
+     adb pull /system/etc/apns-conf.xml firmware/samsung/
+     adb pull /system/build.prop firmware/samsung/
+     adb pull /system/priv-app/imsservice/imsservice.apk /tmp/imsservice.apk
+     unzip -j /tmp/imsservice.apk "res/raw/mnomap.json" "res/raw/imsswitch.json" "res/raw/imsprofile.json" -d firmware/samsung/
+     ```
+   - **Option B — Extract from an official Samsung firmware archive (without a Samsung phone):**
+     Download an Exynos/Shannon firmware (e.g., `SM-S942B` `EUX`) using open-source tools like `Bifrost` / `samloader`, unpack `AP_*.tar.md5` → `lz4 -d super.img.lz4 super.img` → `lpunpack` `system.img` → extract `system/etc/apns-conf.xml`, `system/build.prop`, and `res/raw/{mnomap,imsswitch,imsprofile}.json` from `system/priv-app/imsservice/imsservice.apk`.
+
+3. **Run the generator & rebuild:**
+   ```sh
+   ./generate-carrier-db.py --update   # writes res/raw/carrier_db.json
+   ./build.sh                          # rebuilds pixel-ims-apn-tuner.apk
+   ```
+   > ⚠️ Raw firmware dumps under `./firmware/` are proprietary to Google and Samsung — keep them local only (`./firmware/` is git-ignored; never commit them).
+</details>
+
+---
+
+### Acknowledgments & Credits
+
+**Original innovation of this project:** the core concept of automatically provisioning persistent carrier **APN profiles for IMS** (`Internet`, `IMS` with 3G `invalid P-CSCF` lockout protection, `MMS`, `XCAP`) and building the `CARRIER_DB` database by cross-referencing Google Pixel's stock carrier database against Samsung Galaxy S26 firmware (sharing the same Shannon modem family) — so uncertified Pixel carriers get verified profiles without touching carriers already supported by Google — is **our own original idea and implementation**.
+
+For the local ADB channel and `CarrierConfig` override mechanics, this project also builds upon ideas from the open-source Pixel IMS community:
+
+- **[charlie-xing/volte-toggle](https://github.com/charlie-xing/volte-toggle)** — original standalone loopback Wireless Debugging + `UiAutomation` architecture and Gradle-free `build.sh` pipeline.
+- **[kyujin-cho/pixel-volte-patch](https://github.com/kyujin-cho/pixel-volte-patch)** — pioneering Pixel VoLTE CarrierConfig patching, `ims.ims_user_agent_string` override concept, non-disruptive `UiAutomation` Accessibility flags, and Dual-SIM IMS handling.
+- **[vvb2060/Ims](https://github.com/vvb2060/Ims)** — privileged `Instrumentation` (`--no-restart`), Android 14–17 MMTEL/Entitlement provisioning bypass keys, and runtime permission self-granting.
+- **[TakaiSaisei/pixel_ims](https://github.com/TakaiSaisei/pixel_ims)** — automatic Wireless Debugging recovery (`WRITE_SECURE_SETTINGS` + `adb_wifi_enabled`), Wi‑Fi-bound `JobScheduler` boot re-apply, Android 12–13 detached execution, and live `ICarrierConfigLoader` flag inspection.
+- **[VinujaHerath/PixelIMS](https://github.com/VinujaHerath/PixelIMS)** — `--no-hidden-api-checks` execution, ViLTE toggle, direct per-SIM system settings shortcut, and batch multi-SIM apply workflow.
+- **[flyfishxu/kadb](https://github.com/flyfishxu/kadb)** & **[LSPosed/HiddenApiBypass](https://github.com/LSPosed/HiddenApiBypass)** — embedded ADB-over-TLS / SPAKE2 client and hidden Android API access.
 
 ---
 
 ## License
 
-[MIT](LICENSE) © Charlie
+[MIT](./LICENSE) — based on [charlie-xing/volte-toggle](https://github.com/charlie-xing/volte-toggle) (© charlie-xing).
